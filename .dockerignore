@@ -1,0 +1,48 @@
+# Git and Documentation
+.git
+.gitignore
+README.md
+LICENSE
+
+# Node dependencies
+node_modules
+*/node_modules
+.npm
+
+# Build outputs
+dist
+*/dist
+build
+*/build
+
+# Environment files and Secrets
+.env
+.env.*
+.env.local
+
+# SQLite and Local Data
+*.sqlite
+*.sqlite-*
+*.db
+data
+*/data
+
+# Testing and Coverage
+coverage
+.nyc_output
+test
+*/test
+**/*.spec.ts
+**/*.test.tsx
+
+# IDE and System Files
+.vscode
+.idea
+*.swp
+.DS_Store
+Thumbs.db
+
+# Logs
+logs
+*.log
+npm-debug.log*
