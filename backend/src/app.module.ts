@@ -39,9 +39,11 @@ import { TodosModule } from './todos/todos.module';
         {
           rootPath: configService.get<string>('staticDir'),
           serveRoot: '/',
+          exclude: ['/api/(.*)', '/api*'],
         },
       ],
     }),
+
     TodosModule,
 
   ],
