@@ -9,6 +9,7 @@ import {
 import { Todo } from '../types/todo';
 import api from '../services/api';
 import TodoList from '../components/TodoList';
+import TodoForm from '../components/TodoForm';
 
 const Home: React.FC = () => {
   const [todos, setTodos] = useState<Todo[]>([]);
@@ -25,6 +26,16 @@ const Home: React.FC = () => {
   useEffect(() => {
     fetchTodos();
   }, [fetchTodos]);
+
+  const handleAdd = async (title: string) => {
+    try {
+      const created = await api.createTodo({ title });
+      setTodos((prev) => [created, ...prev]);
+    } catch (err) {
+      console.error('Failed to create todo', err);
+      throw err;
+    }
+  };
 
   const handleToggle = async (id: number, completed: boolean) => {
     try {
@@ -52,6 +63,7 @@ const Home: React.FC = () => {
         </IonToolbar>
       </IonHeader>
       <IonContent fullscreen className="ion-padding">
+        <TodoForm onAdd={handleAdd} />
         <TodoList
           todos={todos}
           onToggle={handleToggle}
