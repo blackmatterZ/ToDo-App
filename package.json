@@ -1,0 +1,14 @@
+{
+  "name": "ionic-nestjs-docker-todo-app",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Fullstack Todo Application with NestJS, Ionic React, SQLite, and Docker",
+  "workspaces": [
+    "backend",
+    "frontend"
+  ],
+  "scripts": {
+    "build": "npm run build --workspace=backend && npm run build --workspace=frontend",
+    "test": "npm run test --workspace=backend && npm run test --workspace=frontend"
+  }
+}
