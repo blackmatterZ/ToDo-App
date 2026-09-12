@@ -11,6 +11,8 @@ async function bootstrap() {
   app.disable('x-powered-by');
   app.use(helmet());
 
+  app.setGlobalPrefix('api');
+
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,
@@ -18,6 +20,7 @@ async function bootstrap() {
       transform: true,
     }),
   );
+
 
   const port = process.env.PORT || 3000;
   await app.listen(port);
