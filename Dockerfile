@@ -41,7 +41,11 @@ WORKDIR /app
 COPY --from=backend-builder /app/backend/dist ./backend/dist
 COPY --from=frontend-builder /app/frontend/dist ./frontend/dist
 
-RUN mkdir -p /app/data
+RUN mkdir -p /app/data && chown -R node:node /app
+
+# Security: OWASP A05 - Run container process as unprivileged non-root user
+USER node
 
 EXPOSE 3000
 CMD ["node", "backend/dist/main"]
+
