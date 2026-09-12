@@ -4,6 +4,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import * as path from 'path';
 import * as fs from 'fs';
 import configuration from './config/configuration';
+import { TodosModule } from './todos/todos.module';
 
 @Module({
   imports: [
@@ -29,8 +30,10 @@ import configuration from './config/configuration';
         };
       },
     }),
+    TodosModule,
   ],
   controllers: [],
   providers: [],
 })
 export class AppModule {}
+
