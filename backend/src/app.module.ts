@@ -1,7 +1,9 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { ServeStaticModule } from '@nestjs/serve-static';
 import * as path from 'path';
+
 import * as fs from 'fs';
 import configuration from './config/configuration';
 import { TodosModule } from './todos/todos.module';
@@ -30,7 +32,18 @@ import { TodosModule } from './todos/todos.module';
         };
       },
     }),
+    ServeStaticModule.forRootAsync({
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: (configService: ConfigService) => [
+        {
+          rootPath: configService.get<string>('staticDir'),
+          serveRoot: '/',
+        },
+      ],
+    }),
     TodosModule,
+
   ],
   controllers: [],
   providers: [],
