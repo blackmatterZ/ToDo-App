@@ -1,22 +1,20 @@
 # ==============================================================================
 # Stage 1: Frontend Builder
-# Uses root monorepo lockfile so npm ci works correctly.
 # ==============================================================================
 FROM node:20-alpine AS frontend-builder
 WORKDIR /app
 
-# Install native build tools (needed by some npm packages)
 RUN apk add --no-cache python3 make g++
 
-# Copy root workspace manifests first (layer-cache friendly)
 COPY package*.json ./
 COPY frontend/package.json ./frontend/package.json
 COPY backend/package.json ./backend/package.json
 
-# Install ALL workspace deps using the root lockfile
 RUN npm ci
 
-# Copy frontend source and build
+# Run security audit during build phase (non-blocking audit check)
+RUN npm audit --audit-level=high || true
+
 COPY frontend/ ./frontend/
 RUN npm --workspace=frontend run build
 
@@ -37,8 +35,7 @@ COPY backend/ ./backend/
 RUN npm --workspace=backend run build
 
 # ==============================================================================
-# Stage 3: Production Runner  (lean — no devDeps, no build tools)
-# security: OWASP A05 - run as non-root, no extra packages
+# Stage 3: Production Runner (lean — non-root)
 # ==============================================================================
 FROM node:20-alpine AS runner
 WORKDIR /app
@@ -48,21 +45,22 @@ ENV PORT=3000
 ENV DB_PATH=/app/data/todos.sqlite
 ENV STATIC_DIR=/app/frontend/dist
 
-# Install only production deps using the root lockfile
 COPY package*.json ./
 COPY frontend/package.json ./frontend/package.json
 COPY backend/package.json ./backend/package.json
 RUN npm ci --omit=dev && npm cache clean --force
 
-# Copy compiled artefacts from builder stages
 COPY --from=backend-builder /app/backend/dist ./backend/dist
 COPY --from=frontend-builder /app/frontend/dist ./frontend/dist
 
-# Ensure writable data dir and fix ownership before switching user
-RUN mkdir -p /app/data && chown -R node:node /app
+# Fast targeted chown for non-root user
+RUN mkdir -p /app/data && chown -R node:node /app/data /app/backend/dist /app/frontend/dist /app/package.json
 
-# security: OWASP A05 - unprivileged non-root user
 USER node
 
 EXPOSE 3000
+
+HEALTHCHECK --interval=10s --timeout=5s --start-period=5s --retries=3 \
+  CMD wget --no-verbose --tries=1 --spider http://localhost:3000/api/todos || exit 1
+
 CMD ["node", "backend/dist/main"]
