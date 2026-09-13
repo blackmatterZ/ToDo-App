@@ -2,8 +2,6 @@ import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ServeStaticModule } from '@nestjs/serve-static';
-import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
-import { APP_GUARD } from '@nestjs/core';
 import * as path from 'path';
 
 import * as fs from 'fs';
@@ -15,19 +13,6 @@ import { TodosModule } from './todos/todos.module';
     ConfigModule.forRoot({
       isGlobal: true,
       load: [configuration],
-    }),
-    // security: OWASP A04 - Insecure Design: rate-limit all API requests
-    ThrottlerModule.forRootAsync({
-      imports: [ConfigModule],
-      inject: [ConfigService],
-      useFactory: (config: ConfigService) => ({
-        throttlers: [
-          {
-            ttl: config.get<number>('THROTTLE_TTL', 60000),
-            limit: config.get<number>('THROTTLE_LIMIT', 100),
-          },
-        ],
-      }),
     }),
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
@@ -66,10 +51,7 @@ import { TodosModule } from './todos/todos.module';
 
   ],
   controllers: [],
-  providers: [
-    // Apply rate limiting globally to all routes — security: OWASP A04
-    { provide: APP_GUARD, useClass: ThrottlerGuard },
-  ],
+  providers: [],
 })
 export class AppModule {}
 
