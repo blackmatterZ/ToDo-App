@@ -1,28 +1,40 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, Like } from 'typeorm';
 import { NotFoundException } from '@nestjs/common';
 import { TodosService } from './todos.service';
 import { Todo } from './entities/todo.entity';
+import { Category } from '../categories/entities/category.entity';
 
 describe('TodosService', () => {
   let service: TodosService;
   let repository: Repository<Todo>;
 
+  const mockCategory: Category = {
+    id: 'cat-uuid',
+    name: 'Work',
+    color: '#ff0000',
+    createdAt: new Date(),
+    updatedAt: new Date(),
+    todos: [],
+  };
+
   const mockTodo: Todo = {
-    id: 1,
+    id: 'some-uuid',
     title: 'Test Todo',
     completed: false,
+    categoryId: null,
+    category: null,
     createdAt: new Date(),
     updatedAt: new Date(),
   };
 
   const mockRepository = {
-    create: jest.fn().mockImplementation((dto) => ({ ...dto, id: 1 })),
+    create: jest.fn().mockImplementation((dto) => ({ ...dto, id: 'some-uuid' })),
     save: jest.fn().mockImplementation((todo) => Promise.resolve({ ...mockTodo, ...todo })),
-    find: jest.fn().mockResolvedValue([mockTodo]),
+    findAndCount: jest.fn().mockResolvedValue([[mockTodo], 1]),
     findOne: jest.fn().mockImplementation(({ where: { id } }) => {
-      if (id === 1) return Promise.resolve(mockTodo);
+      if (id === 'some-uuid') return Promise.resolve(mockTodo);
       return Promise.resolve(null);
     }),
     remove: jest.fn().mockResolvedValue(mockTodo),
@@ -57,43 +69,59 @@ describe('TodosService', () => {
       const result = await service.create(dto);
       expect(mockRepository.create).toHaveBeenCalledWith(dto);
       expect(mockRepository.save).toHaveBeenCalled();
-      expect(result).toHaveProperty('id', 1);
+      expect(result).toHaveProperty('id', 'some-uuid');
     });
   });
 
   describe('findAll', () => {
-    it('should return an array of todos', async () => {
+    it('should return a paginated array of todos', async () => {
       const result = await service.findAll();
-      expect(mockRepository.find).toHaveBeenCalledWith({
+      expect(mockRepository.findAndCount).toHaveBeenCalledWith({
+        where: {},
+        skip: 0,
+        take: 10,
         order: { createdAt: 'DESC' },
       });
-      expect(result).toEqual([mockTodo]);
+      expect(result).toEqual([[mockTodo], 1]);
+    });
+
+    it('should filter by search and categoryId', async () => {
+      await service.findAll(2, 5, 'test', 'cat-uuid');
+      expect(mockRepository.findAndCount).toHaveBeenCalledWith({
+        where: {
+          title: Like('%test%'),
+          categoryId: 'cat-uuid',
+        },
+        skip: 5,
+        take: 5,
+        order: { createdAt: 'DESC' },
+      });
     });
   });
 
   describe('findOne', () => {
     it('should return a single todo if found', async () => {
-      const result = await service.findOne(1);
-      expect(mockRepository.findOne).toHaveBeenCalledWith({ where: { id: 1 } });
+      const result = await service.findOne('some-uuid');
+      expect(mockRepository.findOne).toHaveBeenCalledWith({ where: { id: 'some-uuid' } });
       expect(result).toEqual(mockTodo);
     });
 
     it('should throw NotFoundException if todo not found', async () => {
-      await expect(service.findOne(999)).rejects.toThrow(NotFoundException);
+      await expect(service.findOne('missing')).rejects.toThrow(NotFoundException);
     });
   });
 
   describe('update', () => {
     it('should update and return the todo', async () => {
       const dto = { completed: true };
-      const result = await service.update(1, dto);
-      expect(mockRepository.findOne).toHaveBeenCalledWith({ where: { id: 1 } });
+      const result = await service.update('some-uuid', dto);
+      expect(mockRepository.findOne).toHaveBeenCalledWith({ where: { id: 'some-uuid' } });
       expect(mockRepository.save).toHaveBeenCalled();
       expect(result.completed).toBe(true);
     });
 
     it('should throw NotFoundException when updating non-existent todo', async () => {
-      await expect(service.update(999, { title: 'Updated' })).rejects.toThrow(
+      await expect(service.update('missing', { title: 'Updated' })).rejects.toThrow(
         NotFoundException,
       );
     });
@@ -101,13 +129,13 @@ describe('TodosService', () => {
 
   describe('remove', () => {
     it('should remove the todo', async () => {
-      await service.remove(1);
-      expect(mockRepository.findOne).toHaveBeenCalledWith({ where: { id: 1 } });
+      await service.remove('some-uuid');
+      expect(mockRepository.findOne).toHaveBeenCalledWith({ where: { id: 'some-uuid' } });
       expect(mockRepository.remove).toHaveBeenCalledWith(mockTodo);
     });
 
     it('should throw NotFoundException when deleting non-existent todo', async () => {
-      await expect(service.remove(999)).rejects.toThrow(NotFoundException);
+      await expect(service.remove('missing')).rejects.toThrow(NotFoundException);
     });
   });
 });
