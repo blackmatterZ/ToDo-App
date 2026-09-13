@@ -1,4 +1,4 @@
-import { Todo, CreateTodoInput, UpdateTodoInput, ApiError } from '../types/todo';
+import { Todo, CreateTodoInput, UpdateTodoInput, ApiError, PaginatedResponse, Category, Statistics } from '../types/todo';
 
 const BASE_URL = (import.meta.env.VITE_API_BASE_URL || '/api').replace(/\/$/, '');
 
@@ -26,14 +26,14 @@ class ApiClient {
     if (!response.ok) {
       let errorMessage = `HTTP Error ${response.status}: ${response.statusText}`;
       try {
-        const errorBody: ApiError = await response.json();
-        if (Array.isArray(errorBody.message)) {
-          errorMessage = errorBody.message.join(', ');
-        } else if (errorBody.message) {
-          errorMessage = errorBody.message;
+        const errorBody: any = await response.json();
+        if (errorBody?.error?.message) {
+          errorMessage = errorBody.error.message;
+        } else if (errorBody?.message) {
+          errorMessage = Array.isArray(errorBody.message) ? errorBody.message.join(', ') : errorBody.message;
         }
       } catch {
-        // Fallback to default message if body is not json
+        // Fallback
       }
       throw new Error(errorMessage);
     }
@@ -45,11 +45,14 @@ class ApiClient {
     return response.json();
   }
 
-  async getTodos(): Promise<Todo[]> {
-    return this.request<Todo[]>('/todos');
+  async getTodos(page = 1, pageSize = 10, search?: string, categoryId?: string): Promise<PaginatedResponse<Todo>> {
+    const query = new URLSearchParams({ page: String(page), pageSize: String(pageSize) });
+    if (search) query.append('search', search);
+    if (categoryId) query.append('categoryId', categoryId);
+    return this.request<PaginatedResponse<Todo>>(`/todos?${query.toString()}`);
   }
 
-  async getTodo(id: number): Promise<Todo> {
+  async getTodo(id: string): Promise<Todo> {
     return this.request<Todo>(`/todos/${id}`);
   }
 
@@ -60,17 +63,40 @@ class ApiClient {
     });
   }
 
-  async updateTodo(id: number, input: UpdateTodoInput): Promise<Todo> {
+  async updateTodo(id: string, input: UpdateTodoInput): Promise<Todo> {
     return this.request<Todo>(`/todos/${id}`, {
       method: 'PATCH',
       body: JSON.stringify(input),
     });
   }
 
-  async deleteTodo(id: number): Promise<void> {
+  async deleteTodo(id: string): Promise<void> {
     return this.request<void>(`/todos/${id}`, {
       method: 'DELETE',
     });
+  }
+
+  // Categories
+  async getCategories(page = 1, pageSize = 100): Promise<PaginatedResponse<Category>> {
+    return this.request<PaginatedResponse<Category>>(`/categories?page=${page}&pageSize=${pageSize}`);
+  }
+
+  async createCategory(input: { name: string; color: string }): Promise<Category> {
+    return this.request<Category>('/categories', {
+      method: 'POST',
+      body: JSON.stringify(input),
+    });
+  }
+
+  async deleteCategory(id: string): Promise<void> {
+    return this.request<void>(`/categories/${id}`, {
+      method: 'DELETE',
+    });
+  }
+
+  // Statistics
+  async getStatistics(): Promise<Statistics> {
+    return this.request<Statistics>('/statistics');
   }
 }
 

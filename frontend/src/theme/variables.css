@@ -1,23 +1,34 @@
-/* Ionic Variables and Theming */
+/* Design System Theme Tokens */
 :root {
-  --ion-color-primary: #3880ff;
-  --ion-color-primary-rgb: 56, 128, 255;
-  --ion-color-primary-contrast: #ffffff;
-  --ion-color-primary-contrast-rgb: 255, 255, 255;
-  --ion-color-primary-shade: #3171e0;
-  --ion-color-primary-tint: #4c8dff;
+  --bg: #eef2f9;
+  --surface: #ffffff;
+  --primary: #3b6ef6;
+  --accent-success: #3fbe72;
+  --accent-warning: #f5a623;
+  --text: #1a1f2b;
+  --border: #e0e6f1;
 
-  --ion-color-success: #2dd36f;
-  --ion-color-success-rgb: 45, 211, 111;
-  --ion-color-success-contrast: #ffffff;
-  --ion-color-success-contrast-rgb: 255, 255, 255;
-  --ion-color-success-shade: #28ba62;
-  --ion-color-success-tint: #42d77d;
+  /* Ionic Overrides */
+  --ion-background-color: var(--bg);
+  --ion-text-color: var(--text);
+  --ion-color-primary: var(--primary);
+  --ion-item-background: var(--surface);
+  --ion-card-background: var(--surface);
+}
 
-  --ion-color-danger: #eb445a;
-  --ion-color-danger-rgb: 235, 68, 90;
-  --ion-color-danger-contrast: #ffffff;
-  --ion-color-danger-contrast-rgb: 255, 255, 255;
-  --ion-color-danger-shade: #cf3c4f;
-  --ion-color-danger-tint: #ed576b;
+[data-theme="dark"] {
+  --bg: #121826;
+  --surface: #1e2433;
+  --primary: #5b8bff;
+  --accent-success: #3fd08a;
+  --accent-warning: #f7b955;
+  --text: #eef2f9;
+  --border: #2c3547;
+
+  /* Ionic Overrides */
+  --ion-background-color: var(--bg);
+  --ion-text-color: var(--text);
+  --ion-color-primary: var(--primary);
+  --ion-item-background: var(--surface);
+  --ion-card-background: var(--surface);
 }
