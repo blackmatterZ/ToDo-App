@@ -1,4 +1,4 @@
-import { Todo, CreateTodoInput, UpdateTodoInput, ApiError, PaginatedResponse, Category, Statistics } from '../types/todo';
+import { Todo, CreateTodoInput, UpdateTodoInput, PaginatedResponse, Category, Statistics } from '../types/todo';
 
 const BASE_URL = (import.meta.env.VITE_API_BASE_URL || '/api').replace(/\/$/, '');
 

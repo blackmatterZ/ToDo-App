@@ -15,3 +15,4 @@ if [ -n "${DOCKER_HUB_USER:-}" ]; then
 else
   echo "==> DOCKER_HUB_USER not set. Image built locally as ${IMAGE_NAME}:${TAG}"
 fi
+

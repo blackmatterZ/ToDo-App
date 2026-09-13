@@ -2,8 +2,6 @@ import React, { useState, useEffect, useCallback } from 'react';
 import {
   IonCard,
   IonCardContent,
-  IonCardHeader,
-  IonCardTitle,
   IonButton,
   IonItem,
   IonLabel,
