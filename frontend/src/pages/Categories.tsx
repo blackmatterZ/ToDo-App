@@ -1,109 +1,180 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import {
-  IonCard,
-  IonCardContent,
-  IonButton,
-  IonItem,
-  IonInput,
-  IonSpinner,
-  IonIcon,
-} from '@ionic/react';
-import { trashOutline } from 'ionicons/icons';
+import React, { useState } from 'react';
+import { IonSpinner } from '@ionic/react';
 import Layout from '../components/Layout';
-import api from '../services/api';
-import { Category } from '../types/todo';
+import { useCategory } from '../context/CategoryContext';
 
 const Categories: React.FC = () => {
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { categories, addCategory, removeCategory, loading } = useCategory();
   
   const [newName, setNewName] = useState('');
   const [newColor, setNewColor] = useState('#3b6ef6');
+  const [adding, setAdding] = useState(false);
+  const [error, setError] = useState('');
 
-  const loadData = useCallback(async () => {
-    try {
-      setLoading(true);
-      const res = await api.getCategories(1, 100);
-      setCategories(res.data);
-    } catch (e) {
-      console.error(e);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    loadData();
-  }, [loadData]);
-
+  /* ── OPTIMISTIC ADD ────────────────────────────── */
   const handleAdd = async () => {
-    if (!newName.trim()) return;
+    const name = newName.trim();
+    if (!name) { setError('Name is required'); return; }
+
+    setError('');
+    setAdding(true);
+
     try {
-      await api.createCategory({
-        name: newName,
-        color: newColor,
-      });
+      await addCategory(name, newColor);
       setNewName('');
-      setNewColor('#3b6ef6');
-      loadData();
-    } catch (e) {
-      console.error(e);
+    } catch (e: any) {
+      setError(e?.message || 'Failed to create category');
+    } finally {
+      setAdding(false);
     }
   };
 
+  /* ── OPTIMISTIC DELETE ─────────────────────────── */
   const handleDelete = async (id: string) => {
     try {
-      await api.deleteCategory(id);
-      loadData();
-    } catch (e) {
-      console.error(e);
+      await removeCategory(id);
+    } catch (e: any) {
+      setError(e?.message || 'Failed to delete category');
     }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') handleAdd();
   };
 
   return (
-    <Layout>
-      <div style={{ display: 'flex', gap: '1rem', marginBottom: '2rem' }}>
-        <IonItem style={{ flex: 1, '--border-radius': '8px', '--background': 'var(--surface)' }}>
-          <IonInput 
-            placeholder="New Category Name" 
-            value={newName} 
-            onIonInput={e => setNewName(e.detail.value!)} 
-            onKeyDown={e => e.key === 'Enter' && handleAdd()}
+    <Layout title="Categories">
+      {/* ── Add row ──────────────────────────────────── */}
+      <div className="input-row" style={{ alignItems: 'center' }}>
+        {/* Color picker */}
+        <label
+          className="color-swatch-picker"
+          title="Pick a color"
+          style={{ backgroundColor: newColor }}
+        >
+          <input
+            type="color"
+            value={newColor}
+            onChange={e => setNewColor(e.target.value)}
+            style={{ opacity: 0, width: '100%', height: '100%', cursor: 'pointer' }}
           />
-        </IonItem>
-        <IonItem style={{ '--border-radius': '8px', '--background': 'var(--surface)', width: '100px' }}>
-          <input 
-            type="color" 
-            value={newColor} 
-            onChange={e => setNewColor(e.target.value)} 
-            style={{ width: '100%', border: 'none', background: 'none' }}
-          />
-        </IonItem>
-        <IonButton onClick={handleAdd}>Add</IonButton>
+        </label>
+
+        {/* Name input */}
+        <input
+          type="text"
+          placeholder="Category name…"
+          value={newName}
+          onChange={e => setNewName(e.target.value)}
+          onKeyDown={handleKeyDown}
+          style={{
+            flex: 1,
+            border: 'none',
+            outline: 'none',
+            background: 'transparent',
+            color: 'var(--text)',
+            fontSize: '0.95rem',
+            padding: '6px 4px',
+          }}
+        />
+
+        <button
+          className="btn-primary"
+          onClick={handleAdd}
+          disabled={adding || !newName.trim()}
+        >
+          {adding ? 'Adding…' : '+ Add Category'}
+        </button>
       </div>
 
+      {/* ── Error message ─────────────────────────────── */}
+      {error && (
+        <div style={{
+          background: 'color-mix(in srgb, #e64747 10%, transparent)',
+          border: '1px solid color-mix(in srgb, #e64747 30%, transparent)',
+          color: '#e64747',
+          borderRadius: 8,
+          padding: '8px 14px',
+          fontSize: '0.88rem',
+          marginBottom: 16,
+        }}>
+          ⚠️ {error}
+        </div>
+      )}
+
+      {/* ── List ─────────────────────────────────────── */}
       {loading ? (
-        <div style={{ textAlign: 'center', padding: '2rem' }}>
-          <IonSpinner />
+        <div style={{ textAlign: 'center', padding: '4rem 0' }}>
+          <IonSpinner name="dots" />
+        </div>
+      ) : categories.length === 0 ? (
+        <div className="empty-state">
+          <span style={{ fontSize: '3rem' }}>🏷️</span>
+          <p style={{ margin: 0, fontWeight: 500 }}>No categories yet</p>
+          <p style={{ margin: 0, fontSize: '0.85rem' }}>Create one above to organise your todos.</p>
         </div>
       ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-          {categories.map(cat => (
-            <IonCard key={cat.id} style={{ margin: 0, '--background': 'var(--surface)' }}>
-              <IonCardContent style={{ display: 'flex', alignItems: 'center', gap: '1rem', padding: '10px' }}>
-                <div style={{ width: '24px', height: '24px', borderRadius: '50%', backgroundColor: cat.color }} />
-                <div style={{ flex: 1, fontSize: '1.1rem', color: 'var(--text)' }}>{cat.name}</div>
-                <IonButton fill="clear" color="danger" onClick={() => handleDelete(cat.id)}>
-                  <IonIcon icon={trashOutline} slot="icon-only" />
-                </IonButton>
-              </IonCardContent>
-            </IonCard>
-          ))}
-          {categories.length === 0 && (
-            <div style={{ textAlign: 'center', padding: '2rem', color: 'var(--text)' }}>
-              No categories found.
-            </div>
-          )}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: 12 }}>
+          {categories.map((cat, idx) => {
+            const isPending = cat.id.startsWith('tmp-');
+            return (
+              <div
+                key={cat.id}
+                className="app-card animate-in"
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 14,
+                  opacity: isPending ? 0.6 : 1,
+                  animationDelay: `${idx * 0.03}s`,
+                }}
+              >
+                {/* Color accent bar on the left */}
+                <div style={{
+                  width: 4,
+                  height: 40,
+                  borderRadius: 4,
+                  background: cat.color,
+                  flexShrink: 0,
+                }} />
+
+                {/* Color dot */}
+                <div style={{
+                  width: 36,
+                  height: 36,
+                  borderRadius: 10,
+                  background: `color-mix(in srgb, ${cat.color} 20%, transparent)`,
+                  border: `2px solid color-mix(in srgb, ${cat.color} 50%, transparent)`,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  flexShrink: 0,
+                }}>
+                  <div style={{ width: 12, height: 12, borderRadius: '50%', background: cat.color }} />
+                </div>
+
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontWeight: 600, fontSize: '0.95rem', color: 'var(--text)' }}>
+                    {cat.name}
+                  </div>
+                  {isPending && (
+                    <div style={{ fontSize: '0.75rem', color: 'color-mix(in srgb, var(--text) 40%, transparent)' }}>
+                      Saving…
+                    </div>
+                  )}
+                </div>
+
+                <button
+                  className="btn-danger-ghost"
+                  onClick={() => handleDelete(cat.id)}
+                  disabled={isPending}
+                  title="Delete category"
+                >
+                  🗑
+                </button>
+              </div>
+            );
+          })}
         </div>
       )}
     </Layout>

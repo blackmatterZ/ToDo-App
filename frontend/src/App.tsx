@@ -24,20 +24,26 @@ import '@ionic/react/css/display.css';
 
 /* Theme variables */
 import './theme/variables.css';
+/* App-wide styles */
+import './theme/app.css';
+
+import { CategoryProvider } from './context/CategoryContext';
 
 setupIonicReact();
 
 const App: React.FC = () => (
   <IonApp>
     <IonReactRouter>
-      <IonRouterOutlet>
-        <Route exact path="/todos" component={Todos} />
-        <Route exact path="/categories" component={Categories} />
-        <Route exact path="/statistics" component={Statistics} />
-        <Route exact path="/">
-          <Redirect to="/todos" />
-        </Route>
-      </IonRouterOutlet>
+      <CategoryProvider>
+        <IonRouterOutlet>
+          <Route exact path="/todos" component={Todos} />
+          <Route exact path="/categories" component={Categories} />
+          <Route exact path="/statistics" component={Statistics} />
+          <Route exact path="/">
+            <Redirect to="/todos" />
+          </Route>
+        </IonRouterOutlet>
+      </CategoryProvider>
     </IonReactRouter>
   </IonApp>
 );

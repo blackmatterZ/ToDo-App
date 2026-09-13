@@ -1,30 +1,21 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import {
-  IonCard,
-  IonCardContent,
-  IonCardHeader,
-  IonCardTitle,
-  IonSpinner,
-} from '@ionic/react';
+import { IonSpinner } from '@ionic/react';
 import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import Layout from '../components/Layout';
 import api from '../services/api';
-import { Statistics as StatsType, Category } from '../types/todo';
+import { Statistics as StatsType } from '../types/todo';
+import { useCategory } from '../context/CategoryContext';
 
 const Statistics: React.FC = () => {
+  const { categories } = useCategory();
   const [stats, setStats] = useState<StatsType | null>(null);
-  const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
 
   const loadData = useCallback(async () => {
     try {
       setLoading(true);
-      const [statsRes, catsRes] = await Promise.all([
-        api.getStatistics(),
-        api.getCategories(1, 100)
-      ]);
+      const statsRes = await api.getStatistics();
       setStats(statsRes);
-      setCategories(catsRes.data);
     } catch (e) {
       console.error(e);
     } finally {
@@ -38,9 +29,9 @@ const Statistics: React.FC = () => {
 
   if (loading || !stats) {
     return (
-      <Layout>
-        <div style={{ textAlign: 'center', padding: '2rem' }}>
-          <IonSpinner />
+      <Layout title="Statistics">
+        <div style={{ textAlign: 'center', padding: '4rem 0' }}>
+          <IonSpinner name="dots" />
         </div>
       </Layout>
     );
@@ -56,62 +47,73 @@ const Statistics: React.FC = () => {
   });
 
   return (
-    <Layout>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem', marginBottom: '2rem' }}>
-        <IonCard style={{ margin: 0, '--background': 'var(--surface)' }}>
-          <IonCardHeader>
-            <IonCardTitle style={{ color: 'var(--text)' }}>Total</IonCardTitle>
-          </IonCardHeader>
-          <IonCardContent style={{ fontSize: '2rem', fontWeight: 'bold', color: 'var(--primary)' }}>
+    <Layout title="Statistics">
+      {/* ── Summary Stats Grid ────────────────────────── */}
+      <div className="stats-grid animate-in">
+        <div className="stat-card">
+          <div className="stat-label">Total Todos</div>
+          <div className="stat-value" style={{ color: 'var(--primary)' }}>
             {stats.total}
-          </IonCardContent>
-        </IonCard>
+          </div>
+        </div>
 
-        <IonCard style={{ margin: 0, '--background': 'var(--surface)' }}>
-          <IonCardHeader>
-            <IonCardTitle style={{ color: 'var(--text)' }}>Completed</IonCardTitle>
-          </IonCardHeader>
-          <IonCardContent style={{ fontSize: '2rem', fontWeight: 'bold', color: 'var(--accent-success)' }}>
+        <div className="stat-card" style={{ animationDelay: '0.05s' }}>
+          <div className="stat-label">Completed</div>
+          <div className="stat-value" style={{ color: 'var(--accent-success)' }}>
             {stats.completed}
-          </IonCardContent>
-        </IonCard>
+          </div>
+        </div>
 
-        <IonCard style={{ margin: 0, '--background': 'var(--surface)' }}>
-          <IonCardHeader>
-            <IonCardTitle style={{ color: 'var(--text)' }}>Pending</IonCardTitle>
-          </IonCardHeader>
-          <IonCardContent style={{ fontSize: '2rem', fontWeight: 'bold', color: 'var(--accent-warning)' }}>
+        <div className="stat-card" style={{ animationDelay: '0.1s' }}>
+          <div className="stat-label">Pending</div>
+          <div className="stat-value" style={{ color: 'var(--accent-warning)' }}>
             {stats.pending}
-          </IonCardContent>
-        </IonCard>
+          </div>
+        </div>
       </div>
 
-      <IonCard style={{ margin: 0, '--background': 'var(--surface)' }}>
-        <IonCardHeader>
-          <IonCardTitle style={{ color: 'var(--text)' }}>By Category</IonCardTitle>
-        </IonCardHeader>
-        <IonCardContent>
-          <div style={{ height: '300px' }}>
+      {/* ── Chart Card ────────────────────────────────── */}
+      <div className="app-card animate-in" style={{ animationDelay: '0.15s', padding: '24px' }}>
+        <h3 style={{ margin: '0 0 20px 0', fontSize: '1.2rem', color: 'var(--text)' }}>
+          By Category
+        </h3>
+        
+        {chartData.length === 0 ? (
+          <div className="empty-state" style={{ padding: '2rem 0' }}>
+            <span style={{ fontSize: '2rem' }}>📊</span>
+            <p>No category data available yet.</p>
+          </div>
+        ) : (
+          <div style={{ height: '340px' }}>
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie
                   data={chartData}
-                  innerRadius={60}
-                  outerRadius={100}
+                  innerRadius={80}
+                  outerRadius={120}
                   paddingAngle={5}
                   dataKey="value"
+                  stroke="none"
                 >
                   {chartData.map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={entry.color} />
                   ))}
                 </Pie>
-                <Tooltip />
-                <Legend />
+                <Tooltip 
+                  contentStyle={{ 
+                    backgroundColor: 'var(--surface)', 
+                    borderColor: 'var(--border)',
+                    borderRadius: '8px',
+                    color: 'var(--text)'
+                  }}
+                  itemStyle={{ color: 'var(--text)' }}
+                />
+                <Legend wrapperStyle={{ color: 'var(--text)' }} />
               </PieChart>
             </ResponsiveContainer>
           </div>
-        </IonCardContent>
-      </IonCard>
+        )}
+      </div>
     </Layout>
   );
 };
