@@ -40,11 +40,7 @@ import { StatisticsModule } from './statistics/statistics.module';
       useFactory: (configService: ConfigService) => [
         {
           rootPath: configService.get<string>('staticDir'),
-          serveRoot: '/',
-          // Exclude API routes from static serving so they reach NestJS handlers
-          exclude: ['/api*'],
-          // Render index.html for any path not matching a real static file (SPA fallback)
-          renderPath: '/*',
+          exclude: ['/api/(.*)'],
         },
       ],
     }),
