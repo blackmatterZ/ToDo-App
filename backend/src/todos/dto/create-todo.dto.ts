@@ -1,15 +1,16 @@
-import { IsString, IsOptional, IsIn, IsDateString } from 'class-validator';
+import { IsString, IsOptional, IsEnum, IsDateString, IsUUID, MaxLength } from 'class-validator';
+import { TodoStatus } from '../entities/todo.entity';
 
 export class CreateTodoDto {
   @IsString()
+  @MaxLength(255)
   title: string;
 
-  @IsString()
+  @IsEnum(TodoStatus)
   @IsOptional()
-  @IsIn(['Pending', 'Completed'])
-  status?: string;
+  status?: TodoStatus;
   
-  @IsString()
+  @IsUUID()
   @IsOptional()
   categoryId?: string;
 
