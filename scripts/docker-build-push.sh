@@ -5,7 +5,7 @@ IMAGE_NAME="${1:-todo-app}"
 TAG="${2:-latest}"
 
 echo "==> Building Docker image: ${IMAGE_NAME}:${TAG}"
-docker build -t "${IMAGE_NAME}:${TAG}" .
+docker build --network=host -t "${IMAGE_NAME}:${TAG}" .
 
 echo "==> Tagging and pushing Docker image..."
 if [ -n "${DOCKER_HUB_USER:-}" ]; then
