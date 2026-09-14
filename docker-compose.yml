@@ -1,14 +1,14 @@
 services:
   app:
-    image: your-dockerhub-username/todo-app:latest
+    image: 0xhurricane/todo-app:v1
     ports:
-      - "${PORT:-3000}:${PORT:-3000}"
+      - "3000:3000"
     environment:
       - NODE_ENV=production
-      - PORT=${PORT:-3000}
+      - PORT=3000
       - DB_PATH=/app/data/todos.sqlite
       - STATIC_DIR=/app/frontend/dist
-      - CORS_ORIGIN=${CORS_ORIGIN:-http://localhost:3000}
+      - CORS_ORIGIN=http://localhost:3000
     volumes:
       - todo-data:/app/data
     healthcheck:
@@ -16,7 +16,7 @@ services:
       interval: 10s
       timeout: 5s
       retries: 3
-      start_period: 5s
+      start_period: 30s
     restart: unless-stopped
 
 volumes:
