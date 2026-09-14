@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { IonSpinner, IonDatetime, IonDatetimeButton, IonModal } from '@ionic/react';
+import { IonSpinner } from '@ionic/react';
 import Layout from '../components/Layout';
 import api from '../services/api';
 import { Todo } from '../types/todo';
@@ -130,16 +130,35 @@ const Todos: React.FC = () => {
             onChange={e => setNewTitle(e.target.value)} 
             onKeyDown={e => e.key === 'Enter' && handleAdd()}
           />
-          <IonDatetimeButton datetime="dueAt-add" />
-          <IonModal keepContentsMounted={true}>
-            <IonDatetime 
-              id="dueAt-add"
-              presentation="date"
+          <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+            <span style={{ position: 'absolute', left: '10px', pointerEvents: 'none', fontSize: '1.1rem' }}>📅</span>
+            <input 
+              type="date"
               value={newDueAt}
-              onIonChange={e => setNewDueAt(e.detail.value as string)}
-              showClearButton={true}
+              onChange={e => setNewDueAt(e.target.value)}
+              style={{
+                padding: '10px 12px 10px 38px',
+                borderRadius: '8px',
+                border: '1px solid color-mix(in srgb, var(--text) 20%, transparent)',
+                background: 'color-mix(in srgb, var(--surface) 50%, var(--background))',
+                color: 'var(--text)',
+                fontSize: '0.95rem',
+                fontFamily: 'inherit',
+                outline: 'none',
+                cursor: 'pointer',
+                transition: 'all 0.2s',
+                minWidth: '150px'
+              }}
+              onFocus={e => {
+                e.target.style.borderColor = 'var(--primary)';
+                e.target.style.boxShadow = '0 0 0 3px color-mix(in srgb, var(--primary) 20%, transparent)';
+              }}
+              onBlur={e => {
+                e.target.style.borderColor = 'color-mix(in srgb, var(--text) 20%, transparent)';
+                e.target.style.boxShadow = 'none';
+              }}
             />
-          </IonModal>
+          </div>
           <select 
             className="app-select"
             value={newCategoryId}
@@ -237,18 +256,28 @@ const Todos: React.FC = () => {
                   flexDirection: 'column'
                 }}>
                   <span>{todo.title}</span>
-                  {todo.dueAt && (
+                  <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginTop: '4px' }}>
                     <span style={{ 
-                      fontSize: '0.85rem', 
-                      marginTop: '4px',
-                      color: isOverdue ? 'var(--accent-warning)' : 'color-mix(in srgb, var(--text) 60%, transparent)',
+                      fontSize: '0.75rem', 
+                      color: 'color-mix(in srgb, var(--text) 50%, transparent)',
                       display: 'flex',
                       alignItems: 'center',
                       gap: '4px'
                     }}>
-                      📅 {formatDate(todo.dueAt)} {isOverdue && <span style={{fontWeight: 600}}>(Overdue)</span>}
+                      📝 Created: {formatDate(todo.createdAt)}
                     </span>
-                  )}
+                    {todo.dueAt && (
+                      <span style={{ 
+                        fontSize: '0.75rem', 
+                        color: isOverdue ? 'var(--accent-warning)' : 'color-mix(in srgb, var(--text) 50%, transparent)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '4px'
+                      }}>
+                        📅 Due: {formatDate(todo.dueAt)} {isOverdue && <span style={{fontWeight: 600}}>(Overdue)</span>}
+                      </span>
+                    )}
+                  </div>
                 </div>
                 
                 {cat && (
