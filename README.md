@@ -14,7 +14,7 @@ Clone the repository and launch the container with a single command:
 
 ```bash
 git clone https://github.com/blackmatterZ/ToDo-App.git
-cd Todo-App
+cd ToDo-App
 docker compose up -d
 ```
 
