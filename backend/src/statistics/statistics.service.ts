@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { Todo } from '../todos/entities/todo.entity';
+import { Todo, TodoStatus } from '../todos/entities/todo.entity';
 import { Category } from '../categories/entities/category.entity';
 
 @Injectable()
@@ -15,7 +15,7 @@ export class StatisticsService {
 
   async getStatistics() {
     const total = await this.todoRepository.count();
-    const completed = await this.todoRepository.count({ where: { status: 'Completed' } });
+    const completed = await this.todoRepository.count({ where: { status: TodoStatus.Completed } });
     const pending = total - completed;
 
     // Aggregate by category
