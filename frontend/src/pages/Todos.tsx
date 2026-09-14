@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { IonSpinner } from '@ionic/react';
+import { IonSpinner, IonDatetime, IonDatetimeButton, IonModal } from '@ionic/react';
 import Layout from '../components/Layout';
 import api from '../services/api';
 import { Todo } from '../types/todo';
@@ -7,6 +7,15 @@ import { useCategory } from '../context/CategoryContext';
 
 let _tmpId = 0;
 const tmpId = () => `tmp-todo-${++_tmpId}`;
+
+
+const formatDate = (isoStr: string) => {
+  return new Intl.DateTimeFormat('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric'
+  }).format(new Date(isoStr));
+};
 
 const Todos: React.FC = () => {
   const { categories } = useCategory();
@@ -19,6 +28,7 @@ const Todos: React.FC = () => {
   
   const [newTitle, setNewTitle] = useState('');
   const [newCategoryId, setNewCategoryId] = useState<string>('');
+  const [newDueAt, setNewDueAt] = useState('');
   
   const [adding, setAdding] = useState(false);
   const [error, setError] = useState('');
@@ -50,8 +60,9 @@ const Todos: React.FC = () => {
     const optimisticTodo: Todo = {
       id: tmpId(),
       title,
-      completed: false,
+      status: 'Pending',
       categoryId: newCategoryId || null,
+      dueAt: newDueAt || null,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     };
@@ -59,11 +70,13 @@ const Todos: React.FC = () => {
     setTodos(prev => [optimisticTodo, ...prev]);
     setNewTitle('');
     setNewCategoryId('');
+    setNewDueAt('');
 
     try {
       const created = await api.createTodo({
         title,
         categoryId: optimisticTodo.categoryId || undefined,
+        dueAt: optimisticTodo.dueAt || undefined,
       });
       setTodos(prev => prev.map(t => t.id === optimisticTodo.id ? created : t));
     } catch (e: any) {
@@ -78,14 +91,14 @@ const Todos: React.FC = () => {
   const handleToggle = async (todo: Todo) => {
     if (todo.id.startsWith('tmp-')) return;
     
-    const originalStatus = todo.completed;
-    setTodos(prev => prev.map(t => t.id === todo.id ? { ...t, completed: !originalStatus } : t));
+    const newStatus = todo.status === 'Pending' ? 'Completed' : 'Pending';
+    setTodos(prev => prev.map(t => t.id === todo.id ? { ...t, status: newStatus } : t));
     
     try {
-      const updated = await api.updateTodo(todo.id, { completed: !originalStatus });
+      const updated = await api.updateTodo(todo.id, { status: newStatus });
       setTodos(prev => prev.map(t => t.id === todo.id ? updated : t));
     } catch (e: any) {
-      setTodos(prev => prev.map(t => t.id === todo.id ? { ...t, completed: originalStatus } : t));
+      setTodos(prev => prev.map(t => t.id === todo.id ? { ...t, status: todo.status } : t));
       setError(e?.message || 'Failed to update todo');
     }
   };
@@ -117,6 +130,16 @@ const Todos: React.FC = () => {
             onChange={e => setNewTitle(e.target.value)} 
             onKeyDown={e => e.key === 'Enter' && handleAdd()}
           />
+          <IonDatetimeButton datetime="dueAt-add" />
+          <IonModal keepContentsMounted={true}>
+            <IonDatetime 
+              id="dueAt-add"
+              presentation="date"
+              value={newDueAt}
+              onIonChange={e => setNewDueAt(e.detail.value as string)}
+              showClearButton={true}
+            />
+          </IonModal>
           <select 
             className="app-select"
             value={newCategoryId}
@@ -179,6 +202,8 @@ const Todos: React.FC = () => {
           {todos.map((todo, idx) => {
             const cat = categories.find(c => c.id === todo.categoryId);
             const isPending = todo.id.startsWith('tmp-');
+            const isCompleted = todo.status === 'Completed';
+            const isOverdue = todo.status === 'Pending' && todo.dueAt && new Date() > new Date(todo.dueAt);
             
             return (
               <div 
@@ -196,20 +221,34 @@ const Todos: React.FC = () => {
                 <input 
                   type="checkbox"
                   className="app-checkbox"
-                  checked={todo.completed}
+                  checked={isCompleted}
                   onChange={() => handleToggle(todo)}
                   disabled={isPending}
                 />
                 
                 <div style={{ 
                   flex: 1, 
-                  textDecoration: todo.completed ? 'line-through' : 'none',
-                  color: todo.completed ? 'color-mix(in srgb, var(--text) 50%, transparent)' : 'var(--text)',
+                  textDecoration: isCompleted ? 'line-through' : 'none',
+                  color: isCompleted ? 'color-mix(in srgb, var(--text) 50%, transparent)' : 'var(--text)',
                   fontSize: '1.05rem',
                   fontWeight: 500,
                   transition: 'all 0.2s',
+                  display: 'flex',
+                  flexDirection: 'column'
                 }}>
-                  {todo.title}
+                  <span>{todo.title}</span>
+                  {todo.dueAt && (
+                    <span style={{ 
+                      fontSize: '0.85rem', 
+                      marginTop: '4px',
+                      color: isOverdue ? 'var(--accent-warning)' : 'color-mix(in srgb, var(--text) 60%, transparent)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '4px'
+                    }}>
+                      📅 {formatDate(todo.dueAt)} {isOverdue && <span style={{fontWeight: 600}}>(Overdue)</span>}
+                    </span>
+                  )}
                 </div>
                 
                 {cat && (
@@ -222,8 +261,8 @@ const Todos: React.FC = () => {
                   </span>
                 )}
 
-                <span className={`pill ${todo.completed ? 'pill-success' : 'pill-pending'}`}>
-                  {todo.completed ? 'Done' : 'Pending'}
+                <span className={`pill ${isCompleted ? 'pill-success' : 'pill-pending'}`}>
+                  {todo.status}
                 </span>
 
                 <button 

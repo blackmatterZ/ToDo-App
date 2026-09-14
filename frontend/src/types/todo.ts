@@ -7,22 +7,25 @@ export interface Category {
 export interface Todo {
   id: string;
   title: string;
-  completed: boolean;
+  status: string;
   categoryId: string | null;
+  dueAt: string | null;
   createdAt: string;
   updatedAt: string;
 }
 
 export interface CreateTodoInput {
   title: string;
-  completed?: boolean;
+  status?: string;
   categoryId?: string;
+  dueAt?: string;
 }
 
 export interface UpdateTodoInput {
   title?: string;
-  completed?: boolean;
+  status?: string;
   categoryId?: string;
+  dueAt?: string;
 }
 
 export interface PaginatedResponse<T> {
