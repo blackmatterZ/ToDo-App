@@ -66,12 +66,12 @@ describe('Todos API (e2e)', () => {
   it('POST /api/todos - should create a new todo', async () => {
     const res = await request(app.getHttpServer())
       .post('/api/todos')
-      .send({ title: 'Buy groceries', completed: false, categoryId })
+      .send({ title: 'Buy groceries', status: "Pending", categoryId })
       .expect(201);
 
     expect(res.body).toHaveProperty('id');
     expect(res.body.title).toBe('Buy groceries');
-    expect(res.body.completed).toBe(false);
+    expect(res.body.status).toBe("Pending");
     expect(res.body.categoryId).toBe(categoryId);
     createdTodoId = res.body.id;
   });
@@ -117,11 +117,11 @@ describe('Todos API (e2e)', () => {
   it('PATCH /api/todos/:id - should update todo completed status', async () => {
     const res = await request(app.getHttpServer())
       .patch(`/api/todos/${createdTodoId}`)
-      .send({ completed: true })
+      .send({ status: "Completed" })
       .expect(200);
 
     expect(res.body.id).toBe(createdTodoId);
-    expect(res.body.completed).toBe(true);
+    expect(res.body.status).toBe("Completed");
   });
 
   it('DELETE /api/todos/:id - should delete todo', async () => {

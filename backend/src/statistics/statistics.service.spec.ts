@@ -20,7 +20,7 @@ describe('StatisticsService', () => {
 
   const mockTodoRepository = {
     count: jest.fn().mockImplementation((options) => {
-      if (options && options.where && options.where.completed) {
+      if (options && options.where && options.where.status === 'Completed') {
         return Promise.resolve(4); // completed
       }
       return Promise.resolve(10); // total

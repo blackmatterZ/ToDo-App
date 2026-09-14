@@ -22,14 +22,26 @@ describe('TodosService', () => {
   const mockTodo: Todo = {
     id: 'some-uuid',
     title: 'Test Todo',
-    completed: false,
+    status: 'Pending',
+    dueAt: null,
     categoryId: null,
-    category: null,
+    category: null as any,
     createdAt: new Date(),
     updatedAt: new Date(),
   };
 
+  
+  const mockQueryBuilder = {
+    andWhere: jest.fn().mockReturnThis(),
+    skip: jest.fn().mockReturnThis(),
+    take: jest.fn().mockReturnThis(),
+    orderBy: jest.fn().mockReturnThis(),
+    addOrderBy: jest.fn().mockReturnThis(),
+    getManyAndCount: jest.fn().mockResolvedValue([[mockTodo], 1]),
+  };
+
   const mockRepository = {
+    createQueryBuilder: jest.fn().mockReturnValue(mockQueryBuilder),
     create: jest.fn().mockImplementation((dto) => ({ ...dto, id: 'some-uuid' })),
     save: jest.fn().mockImplementation((todo) => Promise.resolve({ ...mockTodo, ...todo })),
     findAndCount: jest.fn().mockResolvedValue([[mockTodo], 1]),
@@ -76,26 +88,19 @@ describe('TodosService', () => {
   describe('findAll', () => {
     it('should return a paginated array of todos', async () => {
       const result = await service.findAll();
-      expect(mockRepository.findAndCount).toHaveBeenCalledWith({
-        where: {},
-        skip: 0,
-        take: 10,
-        order: { createdAt: 'DESC' },
-      });
+      expect(mockRepository.createQueryBuilder).toHaveBeenCalledWith('todo');
+      expect(mockQueryBuilder.skip).toHaveBeenCalledWith(0);
+      expect(mockQueryBuilder.take).toHaveBeenCalledWith(10);
+      expect(mockQueryBuilder.orderBy).toHaveBeenCalledWith('todo.dueAt IS NULL', 'ASC');
       expect(result).toEqual([[mockTodo], 1]);
     });
 
     it('should filter by search and categoryId', async () => {
       await service.findAll(2, 5, 'test', 'cat-uuid');
-      expect(mockRepository.findAndCount).toHaveBeenCalledWith({
-        where: {
-          title: Like('%test%'),
-          categoryId: 'cat-uuid',
-        },
-        skip: 5,
-        take: 5,
-        order: { createdAt: 'DESC' },
-      });
+      expect(mockQueryBuilder.andWhere).toHaveBeenCalledWith('todo.title LIKE :search', { search: '%test%' });
+      expect(mockQueryBuilder.andWhere).toHaveBeenCalledWith('todo.categoryId = :categoryId', { categoryId: 'cat-uuid' });
+      expect(mockQueryBuilder.skip).toHaveBeenCalledWith(5);
+      expect(mockQueryBuilder.take).toHaveBeenCalledWith(5);
     });
   });
 
@@ -113,11 +118,11 @@ describe('TodosService', () => {
 
   describe('update', () => {
     it('should update and return the todo', async () => {
-      const dto = { completed: true };
+      const dto = { status: "Completed" };
       const result = await service.update('some-uuid', dto);
       expect(mockRepository.findOne).toHaveBeenCalledWith({ where: { id: 'some-uuid' } });
       expect(mockRepository.save).toHaveBeenCalled();
-      expect(result.completed).toBe(true);
+      expect(result.status).toBe('Completed');
     });
 
     it('should throw NotFoundException when updating non-existent todo', async () => {
