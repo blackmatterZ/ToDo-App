@@ -1,7 +1,7 @@
 # ==============================================================================
-# Stage 1: Frontend Builder
+# Stage 1: Builder (installs deps once, builds both frontend and backend)
 # ==============================================================================
-FROM node:20-alpine AS frontend-builder
+FROM node:20-alpine AS builder
 WORKDIR /app
 
 RUN apk add --no-cache python3 make g++
@@ -10,32 +10,16 @@ COPY package*.json ./
 COPY frontend/package.json ./frontend/package.json
 COPY backend/package.json ./backend/package.json
 
-RUN npm ci
-
-# Run security audit during build phase (non-blocking audit check)
-RUN npm audit --audit-level=high || true
+RUN npm ci --no-audit --no-fund
 
 COPY frontend/ ./frontend/
-RUN npm --workspace=frontend run build
-
-# ==============================================================================
-# Stage 2: Backend Builder
-# ==============================================================================
-FROM node:20-alpine AS backend-builder
-WORKDIR /app
-
-RUN apk add --no-cache python3 make g++
-
-COPY package*.json ./
-COPY frontend/package.json ./frontend/package.json
-COPY backend/package.json ./backend/package.json
-RUN npm ci
-
 COPY backend/ ./backend/
+
+RUN npm --workspace=frontend run build
 RUN npm --workspace=backend run build
 
 # ==============================================================================
-# Stage 3: Production Runner (lean — non-root)
+# Stage 2: Production Runner (lean — non-root)
 # ==============================================================================
 FROM node:20-alpine AS runner
 WORKDIR /app
@@ -49,11 +33,11 @@ COPY package*.json ./
 COPY frontend/package.json ./frontend/package.json
 COPY backend/package.json ./backend/package.json
 RUN apk add --no-cache python3 make g++ && \
-    npm ci --omit=dev && npm cache clean --force && \
+    npm ci --omit=dev --no-audit --no-fund && npm cache clean --force && \
     apk del python3 make g++
 
-COPY --from=backend-builder /app/backend/dist ./backend/dist
-COPY --from=frontend-builder /app/frontend/dist ./frontend/dist
+COPY --from=builder /app/backend/dist ./backend/dist
+COPY --from=builder /app/frontend/dist ./frontend/dist
 
 # Fast targeted chown for non-root user
 RUN mkdir -p /app/data && chown -R node:node /app/data /app/backend/dist /app/frontend/dist /app/package.json
