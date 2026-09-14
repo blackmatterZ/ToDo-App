@@ -1,6 +1,8 @@
 import { describe, it, expect, vi } from 'vitest';
 import { render } from '@testing-library/react';
-import { MemoryRouter } from 'react-router-dom';
+import { MemoryRouter } from "react-router-dom";
+import { CategoryProvider } from "../context/CategoryContext";
+//  } from 'react-router-dom';
 import Statistics from './Statistics';
 import api from '../services/api';
 
@@ -26,9 +28,9 @@ describe('Statistics Page', () => {
     vi.mocked(api.getCategories).mockResolvedValue({ data: [], meta: { total: 0, page: 1, pageSize: 10, totalPages: 0 } });
     
     const { container } = render(
-      <MemoryRouter>
+      <MemoryRouter><CategoryProvider>
         <Statistics />
-      </MemoryRouter>
+      </CategoryProvider></MemoryRouter>
     );
     expect(container).toBeDefined();
   });
