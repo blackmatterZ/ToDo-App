@@ -15,10 +15,16 @@ Clone the repository and launch the container with a single command:
 ```bash
 git clone <repo-url>
 cd interviewTask
-docker compose up --build
+docker compose up -d
 ```
 
 Access the app in your browser at: **[http://localhost:3000](http://localhost:3000)**
+
+*(Optional) If pulling the image from Docker Hub fails, you can build it manually:*
+```bash
+docker build -t your-dockerhub-username/todo-app:latest .
+docker compose up -d
+```
 
 ---
 
@@ -65,9 +71,9 @@ interviewTask/
 
 | Operating System | Command | Notes |
 |---|---|---|
-| **Linux** | `docker compose up --build` | Uses Docker Engine v2 |
-| **macOS** | `docker compose up --build` | Works on Intel and Apple Silicon (ARM64) via Docker Desktop |
-| **Windows** | `docker compose up --build` | Works in PowerShell / CMD / WSL2 via Docker Desktop |
+| **Linux** | `docker compose up -d` | Uses Docker Engine v2 |
+| **macOS** | `docker compose up -d` | Works on Intel and Apple Silicon (ARM64) via Docker Desktop |
+| **Windows** | `docker compose up -d` | Works in PowerShell / CMD / WSL2 via Docker Desktop |
 
 ### Why Single Command Works Reliably Across All Operating Systems:
 1. **Line Endings (`.gitattributes`)**: Enforces `LF` line endings for `Dockerfile`, scripts, and configuration files regardless of git `core.autocrlf` setting on Windows.
