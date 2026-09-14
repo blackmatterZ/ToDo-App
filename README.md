@@ -22,7 +22,7 @@ Access the app in your browser at: **[http://localhost:3000](http://localhost:30
 
 *(Optional) If pulling the image from Docker Hub fails, you can build it manually:*
 ```bash
-docker build -t 0xhurricane/todo-app:latest .
+docker build -t 0xhurricane/todo-app:v1 .
 docker compose up -d
 ```
 
