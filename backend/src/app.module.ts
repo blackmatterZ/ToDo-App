@@ -30,7 +30,7 @@ import { StatisticsModule } from './statistics/statistics.module';
           type: 'sqlite',
           database: dbPath,
           autoLoadEntities: true,
-          synchronize: true, // safe for SQLite dev/demo mode
+          synchronize: true,
         };
       },
     }),
