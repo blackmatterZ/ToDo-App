@@ -14,7 +14,7 @@ Clone the repository and launch the container with a single command:
 
 ```bash
 git clone <repo-url>
-cd interviewTask
+cd Todo-App
 docker compose up -d
 ```
 
