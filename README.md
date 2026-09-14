@@ -13,7 +13,7 @@ A production-ready Todo application built with Ionic React (frontend), NestJS (b
 Clone the repository and launch the container with a single command:
 
 ```bash
-git clone <repo-url>
+git clone https://github.com/blackmatterZ/ToDo-App.git
 cd Todo-App
 docker compose up -d
 ```
@@ -22,7 +22,7 @@ Access the app in your browser at: **[http://localhost:3000](http://localhost:30
 
 *(Optional) If pulling the image from Docker Hub fails, you can build it manually:*
 ```bash
-docker build -t your-dockerhub-username/todo-app:latest .
+docker build -t 0xhurricane/todo-app:latest .
 docker compose up -d
 ```
 
