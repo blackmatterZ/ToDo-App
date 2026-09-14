@@ -48,7 +48,9 @@ ENV STATIC_DIR=/app/frontend/dist
 COPY package*.json ./
 COPY frontend/package.json ./frontend/package.json
 COPY backend/package.json ./backend/package.json
-RUN npm ci --omit=dev && npm cache clean --force
+RUN apk add --no-cache python3 make g++ && \
+    npm ci --omit=dev && npm cache clean --force && \
+    apk del python3 make g++
 
 COPY --from=backend-builder /app/backend/dist ./backend/dist
 COPY --from=frontend-builder /app/frontend/dist ./frontend/dist
