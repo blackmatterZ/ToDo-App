@@ -1,6 +1,11 @@
 import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn, ManyToOne, JoinColumn } from 'typeorm';
 import { Category } from '../../categories/entities/category.entity';
 
+export enum TodoStatus {
+  Pending = 'Pending',
+  Completed = 'Completed',
+}
+
 @Entity('todos')
 export class Todo {
   @PrimaryGeneratedColumn('uuid')
@@ -9,8 +14,8 @@ export class Todo {
   @Column()
   title: string;
 
-  @Column({ default: 'Pending' })
-  status: string;
+  @Column({ type: 'simple-enum', enum: TodoStatus, default: TodoStatus.Pending })
+  status: TodoStatus;
 
   @Column({ nullable: true })
   categoryId: string;
