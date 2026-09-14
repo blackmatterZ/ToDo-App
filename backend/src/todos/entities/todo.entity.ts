@@ -9,8 +9,8 @@ export class Todo {
   @Column()
   title: string;
 
-  @Column({ default: false })
-  completed: boolean;
+  @Column({ default: 'Pending' })
+  status: string;
 
   @Column({ nullable: true })
   categoryId: string;
@@ -18,6 +18,9 @@ export class Todo {
   @ManyToOne(() => Category, (category) => category.todos, { onDelete: 'SET NULL' })
   @JoinColumn({ name: 'categoryId' })
   category: Category;
+
+  @Column({ type: 'datetime', nullable: true })
+  dueAt: Date;
 
   @CreateDateColumn()
   createdAt: Date;

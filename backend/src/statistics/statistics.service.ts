@@ -15,7 +15,7 @@ export class StatisticsService {
 
   async getStatistics() {
     const total = await this.todoRepository.count();
-    const completed = await this.todoRepository.count({ where: { completed: true } });
+    const completed = await this.todoRepository.count({ where: { status: 'Completed' } });
     const pending = total - completed;
 
     // Aggregate by category

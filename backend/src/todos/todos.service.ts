@@ -23,22 +23,26 @@ export class TodosService {
     search?: string,
     categoryId?: string,
   ): Promise<[Todo[], number]> {
-    const where: any = {};
+    const qb = this.todoRepository.createQueryBuilder('todo');
+
     if (search) {
-      where.title = Like(`%${search}%`);
+      qb.andWhere('todo.title LIKE :search', { search: `%${search}%` });
     }
     if (categoryId) {
-      where.categoryId = categoryId;
+      qb.andWhere('todo.categoryId = :categoryId', { categoryId });
     }
-    
-    return this.todoRepository.findAndCount({
-      where,
-      skip: (page - 1) * pageSize,
-      take: pageSize,
-      order: {
-        createdAt: 'DESC',
-      },
-    });
+
+    qb.skip((page - 1) * pageSize);
+    qb.take(pageSize);
+
+    // SQLite doesn't natively support NULLS LAST out of the box in some older engines,
+    // but we can sort by whether dueAt is null first, then the actual dueAt.
+    // In SQLite: boolean expressions like "todo.dueAt IS NULL" return 0 (false) or 1 (true)
+    qb.orderBy('todo.dueAt IS NULL', 'ASC');
+    qb.addOrderBy('todo.dueAt', 'ASC');
+    qb.addOrderBy('todo.createdAt', 'DESC');
+
+    return qb.getManyAndCount();
   }
 
   async findOne(id: string): Promise<Todo> {

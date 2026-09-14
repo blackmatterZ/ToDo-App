@@ -1,14 +1,19 @@
-import { IsString, IsOptional, IsBoolean } from 'class-validator';
+import { IsString, IsOptional, IsIn, IsDateString } from 'class-validator';
 
 export class CreateTodoDto {
   @IsString()
   title: string;
 
-  @IsBoolean()
+  @IsString()
   @IsOptional()
-  completed?: boolean;
+  @IsIn(['Pending', 'Completed'])
+  status?: string;
   
   @IsString()
   @IsOptional()
   categoryId?: string;
+
+  @IsDateString()
+  @IsOptional()
+  dueAt?: string;
 }
